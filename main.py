@@ -67,3 +67,8 @@ def upload_to_gcs(bucket_name: str, destination_blob_name: str, dataframe: pd.Da
     blob = bucket.blob(destination_blob_name)
     blob.upload_from_string(csv_data, content_type='text/csv')
     print(f"[SUCCESS] Uploaded to GCS: gs://{bucket_name}/{destination_blob_name}")
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))  # Cloud Run 會提供 $PORT 環境變數
+    app.run(host="0.0.0.0", port=port)
