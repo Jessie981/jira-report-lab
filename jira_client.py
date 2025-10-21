@@ -24,25 +24,49 @@ class JiraAPI:
                 "fields": "summary,project,worklog,customfield_10001,customfield_10035,customfield_10142,customfield_10139",
                 "expand": "changelog"
             }
+
             url = f"{self.domain}/rest/api/3/search/jql"
             resp = requests.get(url, headers=self.header, auth=self.auth, params=query)
-            resp.raise_for_status()
+
+            try:
+                resp.raise_for_status()
+            except Exception as e:
+                print(f"[ERROR] Jira API 回傳失敗：{e}")
+                print(f"[DEBUG] 回傳內容：{resp.text}")
+                raise e
+
             data = resp.json()
-            for issue in data["issues"]:
+            raw_issues = data.get("issues", [])
+            print(f"[INFO] 本批次取得 {len(raw_issues)} 筆 issues")
+
+            for issue in raw_issues:
+                fields = issue.get("fields", {})
+                team_field = fields.get("customfield_10001")
+                status_field = fields.get("customfield_10035")
+
                 parsed = {
-                    "name": issue["fields"].get("summary"),
+                    "name": fields.get("summary"),
                     "key": issue.get("key"),
-                    "project_key": issue["fields"]["project"]["key"],
-                    "team": issue["fields"].get("customfield_10001", {}).get("name"),
-                    "status": issue["fields"].get("customfield_10035", {}).get("value"),
-                    "customfield_10142": issue["fields"].get("customfield_10142"),
-                    "customfield_10139": issue["fields"].get("customfield_10139")
+                    "project_key": fields.get("project", {}).get("key"),
+                    "team": team_field.get("name") if isinstance(team_field, dict) else None,
+                    "status": status_field.get("value") if isinstance(status_field, dict) else None,
+                    "customfield_10142": fields.get("customfield_10142"),
+                    "customfield_10139": fields.get("customfield_10139")
                 }
+
+                if parsed["team"] is None:
+                    print(f"[WARN] issue {parsed['key']} 缺少 team (customfield_10001)")
+                if parsed["status"] is None:
+                    print(f"[WARN] issue {parsed['key']} 缺少 status (customfield_10035)")
+
                 issues.append(parsed)
-            if len(data["issues"]) < max_results:
+
+            if len(raw_issues) < max_results:
                 break
             start_at += max_results
+
         return issues
+
 
     def trace_project_info_by_issues(self, issues):
         project_grouping = {}
