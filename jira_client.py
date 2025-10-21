@@ -71,25 +71,48 @@ class JiraAPI:
     def trace_project_info_by_issues(self, issues):
         project_grouping = {}
         for issue in issues:
-            project_key = issue["project_key"]
+            project_key = issue.get("project_key")
+            if not project_key:
+                print(f"[WARN] issue {issue.get('key')} 缺少 project_key，跳過")
+                continue
             issue.pop("project_key")
             project_grouping.setdefault(project_key, []).append(issue)
+
         projects = []
         for key in project_grouping:
             info = self.get_project_info_by_key(key)
             info["issues"] = project_grouping[key]
             projects.append(info)
+
         return projects
+
 
     def get_project_info_by_key(self, key):
         url = f"{self.domain}/rest/api/2/project/{key}"
         resp = requests.get(url, headers=self.header, auth=self.auth)
+        if resp.status_code != 200:
+            print(f"[WARN] 取得 project info 失敗：{key} ({resp.status_code})")
+            return {
+                "project_name": None,
+                "project_key": key,
+                "project_category": None
+            }
+
         data = resp.json()
+        if not isinstance(data, dict):
+            print(f"[WARN] project {key} 回傳資料異常：{data}")
+            return {
+                "project_name": None,
+                "project_key": key,
+                "project_category": None
+            }
+
         return {
             "project_name": data.get("name"),
             "project_key": data.get("key"),
-            "project_category": data.get("projectCategory", {}).get("name")
+            "project_category": (data.get("projectCategory") or {}).get("name")
         }
+
 
     def get_worklog_from_issue_id(self, issue_id):
         worklogs = []
