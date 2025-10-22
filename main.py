@@ -5,6 +5,7 @@ from flask import Flask, request
 from jira_client import JiraAPI, project_data_to_df, user_data_to_df, filter_df_by_date
 import pandas as pd
 from google.cloud import storage
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -71,7 +72,9 @@ def generate_report():
         print(f"[INFO] 過濾後筆數：{len(filtered_df)}")
 
         # Step 7: 上傳到 GCS
-        filename = f"jiraReport_{start_str}_{end_str}.csv"
+        # filename = f"jiraReport_{start_str}_{end_str}.csv"
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M")
+        filename = f"jiraReport_{timestamp}.csv"
         bucket = storage_client.bucket(BUCKET_NAME)
         blob = bucket.blob(filename)
         blob.upload_from_string(filtered_df.to_csv(index=False), content_type="text/csv")
