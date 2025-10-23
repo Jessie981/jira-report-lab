@@ -19,7 +19,8 @@
 > 📌 **記得：Cloud Run 的服務帳號（Service Account）要有存取 GCS 權限**
 建議角色為：
 - `roles/storage.objectCreator`
-- `roles/storage.objectViewer`
+- `roles/storage.objectViewer`  
+我最後改用Admin
 
 ---
 
