@@ -43,10 +43,6 @@ Cloud Run 部署完成後，你可以透過以下方式呼叫 API：
 
 ### 🔸 POST `/`
 
-**Body 格式：**
-
-```json
-{
-  "start_date": "2025-09-01",
-  "end_date": "2025-10-01"
-}
+```bash
+curl -v -H "Authorization: Bearer $(gcloud auth print-identity-token)"   "https://jira-report-test-1075612823060.asia-east1.run.app?start=2025-08-10&end=2025-08-20"
+```
