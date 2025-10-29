@@ -77,7 +77,7 @@ def generate_report():
         filename = f"jiraReport_{timestamp}.csv"
         bucket = storage_client.bucket(BUCKET_NAME)
         blob = bucket.blob(filename)
-        blob.upload_from_string(filtered_df.to_csv(index=False), content_type="text/csv")
+        blob.upload_from_string(filtered_df.to_csv(index=False, encoding="utf-8-sig"), content_type="text/csv")
         print(f"[SUCCESS] 上傳完成 gs://{BUCKET_NAME}/{filename}")
 
         return f" 報表已產出並上傳至 gs://{BUCKET_NAME}/{filename}\n筆數：{len(filtered_df)}", 200
